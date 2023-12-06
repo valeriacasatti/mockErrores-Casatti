@@ -84,6 +84,7 @@ export class ViewsController {
   };
   //profile
   static profile = (req, res) => {
-    res.render("profile", { style: "profile.css" });
+    let { message } = req.query;
+    res.render("profile", { message, style: "profile.css" });
   };
 }

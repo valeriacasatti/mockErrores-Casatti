@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser";
 import passport from "passport";
 import { __dirname } from "./utils.js";
 import { engine } from "express-handlebars";
+import expressHandlebars from "express-handlebars";
+import helpers from "handlebars-helpers";
 import { Server } from "socket.io";
 import { viewsRouter } from "./routes/views.routes.js";
 import { productsRouter } from "./routes/products.routes.js";
@@ -15,7 +17,6 @@ import { chatsRouter } from "./routes/chat.routes.js";
 import { sessionsRouter } from "./routes/sessions.routes.js";
 import { connectDB } from "./config/dbConnection.js";
 import { initializePassport } from "./config/passport.config.js";
-import { checkRole } from "./middlewares/auth.js";
 
 const port = 8080;
 const app = express();
@@ -31,7 +32,14 @@ initializePassport();
 app.use(passport.initialize());
 
 //handlebars
-app.engine(".hbs", engine({ extname: ".hbs" }));
+const { ifEquals } = helpers(["comparison"]);
+const handlebars = expressHandlebars.create({
+  extname: ".hbs",
+  helpers: {
+    ifEquals,
+  },
+});
+app.engine(".hbs", handlebars.engine);
 app.set("view engine", ".hbs");
 app.set("views", path.join(__dirname, "/views"));
 
@@ -109,7 +117,7 @@ io.on("connection", async (socket) => {
       }
     });
 
-    socket.on("messageChat", checkRole(["user"]), async (data) => {
+    socket.on("messageChat", async (data) => {
       try {
         if (data.message.trim() !== "") {
           chat.push(data);
